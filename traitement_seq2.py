@@ -36,7 +36,7 @@ class PointTracker:
         return rect
 
     def update(self, new_pts):
-        """ Force l'association par distance, même si le nombre de points varie """
+        """ Force l'association par distance """
         if len(new_pts) < 4:
             return self.last_pts # On ne peut rien faire sans 4 points
 
@@ -129,9 +129,9 @@ def process_sequence(input_dir, overlay_path, output_dir):
 
 # --- LANCEMENT ---
 if __name__ == "__main__":
-    # Modifie ces chemins selon tes dossiers
-    SOURCE_IMAGES = r"C:\Users\noahm\Documents\SY32\Projet1\projet-homographie\seq2"          # Dossier contenant tes .png ou .jpg rouges
-    OVERLAY_IMG   = r"C:\Users\noahm\Documents\SY32\Projet1\projet-homographie\abecedaire\koala.jpg"     # L'image à coller
-    OUTPUT_FOLDER = r"C:\Users\noahm\Documents\SY32\Projet1\projet-homographie\output_seq2"   # Dossier de destination
+    # Noms des chemins
+    SOURCE_IMAGES = r""
+    OVERLAY_IMG   = r""
+    OUTPUT_FOLDER = r""
     
     process_sequence(SOURCE_IMAGES, OVERLAY_IMG, OUTPUT_FOLDER)
