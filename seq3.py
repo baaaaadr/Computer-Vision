@@ -187,9 +187,14 @@ def overlay_image(background_path: str, overlay_path: str, output_path: str):
     
     quad_mask = np.zeros((bg.shape[0], bg.shape[1]), dtype=np.uint8)
     cv2.fillConvexPoly(quad_mask, dst_pts.astype(int), 255)
+
+    # Élargir le masque de quelques pixels 
+    kernel_size = 5
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+    quad_mask_enlarged = cv2.dilate(quad_mask, kernel, iterations=1)
     
     # ── Detect hand inside the paper region ───────────────────────────────
-    hand_mask = find_hand_mask(bg, quad_mask)  # restrict to quad, not full image
+    hand_mask = find_hand_mask(bg, quad_mask_enlarged)  # restrict to quad, not full image
     
     # ── Composite in 3 layers ─────────────────────────────────────────────
     #   Layer 0 (bottom): original background
