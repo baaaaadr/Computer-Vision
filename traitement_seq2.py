@@ -2,10 +2,8 @@
 """
 Created on Sat May  2 01:37:47 2026
 
-@author: noahm
+@author: Noah Maréchal
 """
-
-# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 from pathlib import Path
@@ -13,7 +11,6 @@ import glob
 import seq1_FINAL
 
 # --- CONFIGURATION ---
-# On baisse S à 50 pour ne pas perdre les gommettes sombres
 COLOR_RANGES = {
     "red":   [(0, 50, 40), (15, 255, 255)],
     "red2":  [(165, 50, 40), (180, 255, 255)],
@@ -46,10 +43,9 @@ class PointTracker:
             return self.last_pts
 
         # Calcul des distances entre tous les nouveaux points et les 4 anciens
-        # On ne garde que les 4 nouveaux les plus proches de nos 4 anciens points
         matched_pts = np.zeros((4, 2), dtype="float32")
         for i in range(4):
-            # Distance entre l'ancien point i et TOUS les nouveaux points détectés
+            # Distance entre l'ancien point i et tous les nouveaux points détectés
             dists = np.linalg.norm(new_pts - self.last_pts[i], axis=1)
             matched_pts[i] = new_pts[np.argmin(dists)]
         
@@ -77,7 +73,7 @@ def find_red_dots_advanced(hsv_img, search_mask):
         if 40 < area < 4000:
             peri = cv2.arcLength(c, True)
             circularite = (4 * np.pi * area) / (peri**2) if peri > 0 else 0
-            # On stocke le centre et le score de circularité
+            # On stocke le centre
             if circularite > 0.4:
                 M = cv2.moments(c)
                 if M["m00"] > 0:
@@ -103,14 +99,13 @@ def process_sequence(input_dir, overlay_path, output_dir):
         bg = cv2.imread(path)
         hsv = cv2.cvtColor(bg, cv2.COLOR_BGR2HSV)
         
-        # On utilise ton find_paper_mask habituel (Lab)
         from seq1_FINAL import find_paper_mask
         paper_mask = find_paper_mask(bg)
         
-        # On récupère TOUS les points rouges crédibles
+        # On récupère tous les points rouges crédibles
         all_dots = find_red_dots_advanced(hsv, paper_mask)
         
-        # Le tracker choisit les 4 qui correspondent au mouvement
+        # Le tracker choisit les 4 cohérents
         dst_pts = tracker.update(all_dots)
         
         if dst_pts is not None:
