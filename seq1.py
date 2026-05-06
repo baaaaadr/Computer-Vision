@@ -4,39 +4,35 @@ import cv2
 import numpy as np
 from pathlib import Path
 
-# Tuned to your actual dot colors
 COLOR_RANGES = {
-    # Yellow dot: S=125, V=210 → table wood is similar hue but S is much lower (~30-60)
-    # Raise S minimum to 100 to exclude the table
-    "yellow": [(5,  100, 150), (30, 255, 255)],   # <-- S min 60→100, V min 120→150
+    "yellow": [(5,  100, 150), (30, 255, 255)],  
     "red":    [(0,   120, 80), (10,  255, 255)],
     "red2":   [(170, 120, 80), (180, 255, 255)],
-    "blue":   [(100, 60, 60), (141, 135, 105)], #[(100, 40,  30), (135, 200, 150)]
+    "blue":   [(100, 60, 60), (141, 135, 105)],
     "green":  [(55,  20,  20), (90,  180, 120)],
 }
 
+
+
 def find_paper_mask(img):
+    # Testing LAB instead of RGB or HSV
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     L, a, b = cv2.split(lab)
-    
-    #detecting WHITE/NEAR-WHITE regions
+
+    # detecting WHITE/NEAR-WHITE regions
     mask = (
-        (L  > 160) &                #Very bright (light gray to white)
-        (a  > 115) & (a < 145) &    #desaturated/near-gray colors: 128 is neutral between green and red
-        (b  > 115) & (b < 150)      #again crossing through neutral: slightly blue to slightly yellow
+        (L  > 160) &                
+        (a  > 115) & (a < 145) &    
+        (b  > 115) & (b < 150)      
     ).astype(np.uint8) * 255
 
-    # Create an elliptical kernel (structuring element) of size 15x15 pixels
-    # This kernel acts as a "brush" for morphological operations
-    # MORPH_ELLIPSE creates a circular/elliptical shape, which preserves rounded corners better than a rectangle
+    # Create an elliptical kernel for rounded corners instead of rectangular
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
-    #fill the holes:
+    # fill the holes:
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel) #fermeture
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  kernel) #puis ouverture
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  kernel) #ouverture
 
     # Find all contours (connected white regions) in the mask
-    # RETR_EXTERNAL: Only retrieve the outermost contours (ignores holes inside regions)
-    # CHAIN_APPROX_SIMPLE: Compresses horizontal, vertical, and diagonal segments to save memory
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     # Check if any contours were found
@@ -44,17 +40,17 @@ def find_paper_mask(img):
         raise RuntimeError("Could not detect the white paper.")
     
     # Find the contour with the largest area (assuming it's the target white paper)
-    # cv2.contourArea() calculates the number of pixels inside the contour
-    largest = max(contours, key=cv2.contourArea) #compare countours based on countour area
-    #create mask
+    largest = max(contours, key=cv2.contourArea)
+    
+    # create mask
     paper_mask = np.zeros_like(mask) 
     cv2.drawContours(paper_mask, [largest], -1, 255, thickness=cv2.FILLED) #draw the largest countour filled with white
 
     # ── Dilate outward to recover areas hidden under the hand ──────────────
     #before on faisait erosion :
     #erode_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (30, 30))
-    #MTN:
-    dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (60, 60)) #using a thick brush
+    #maintenant:
+    dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (60, 60)) # thick brush
     paper_mask = cv2.dilate(paper_mask, dilate_kernel, iterations=1)
 
     return paper_mask
@@ -92,18 +88,19 @@ def find_dot(hsv_img, color: str, search_mask: np.ndarray, min_area: int = 30):
             if attempt == 1:
                 print(f"  [{color}] found only with full mask (dot near paper edge)")
             largest = max(contours, key=cv2.contourArea)  # Take largest dot
-            M = cv2.moments(largest)                     # Calculate image moments
-            cx = int(M["m10"] / M["m00"])                # Center X = sum(x)/sum(area), calculates average X position: somme des differentes positions en X/ nb de pixels
-            cy = int(M["m01"] / M["m00"])                # Center Y = sum(y)/sum(area), calculates average Y position
+            M = cv2.moments(largest)                    
+            cx = int(M["m10"] / M["m00"])     # Center X = sum(x)/sum(area), calculates average X position
+            cy = int(M["m01"] / M["m00"])     # Center Y = sum(y)/sum(area), calculates average Y position
             return (cx, cy)
 
     raise RuntimeError(f"Could not find {color} dot in image.")
 
 
+
 def overlay_image(background_path: str, overlay_path: str, output_path: str):
     """
     Warp overlay into the quadrilateral defined by the 4 colored dots.
-    Dot → corner:  yellow=TL, red=TR, blue=BL, green=BR
+    Dot -> corner:  yellow=TL, red=TR, blue=BL, green=BR
     """
     bg  = cv2.imread(background_path)
     ovr = cv2.imread(overlay_path)
