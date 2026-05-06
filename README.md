@@ -1,3 +1,1 @@
-tchoupi et doudou, ils sont rigolos comme tous
-
-https://canva.link/w867uzv5g52odu6
+You can find the presentation of this project [here](https://canva.link/w867uzv5g52odu6]) !
