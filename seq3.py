@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 import seq1 import find_paper_mask
 import seq1 import find_dot
-
+from seq1 import COLOR_RANGES
 
 def find_hand_mask(img, quad_mask):
     """
