@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 import glob
-import seq1
+import seq1 import find_paper_mask
 
 # --- CONFIGURATION ---
 COLOR_RANGES = {
@@ -94,7 +94,6 @@ def process_sequence(input_dir, overlay_path, output_dir):
         bg = cv2.imread(path)
         hsv = cv2.cvtColor(bg, cv2.COLOR_BGR2HSV)
         
-        from seq1_FINAL import find_paper_mask
         paper_mask = find_paper_mask(bg)
         
         # On récupère tous les points rouges crédibles
