@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat May  2 01:37:47 2026
-
-@author: Noah Maréchal
-"""
 import cv2
 import numpy as np
 from pathlib import Path
 import glob
-import seq1_FINAL
+import seq1
 
 # --- CONFIGURATION ---
 COLOR_RANGES = {
